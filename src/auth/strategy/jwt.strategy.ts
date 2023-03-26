@@ -31,6 +31,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
 		});
 		// rome-ignore lint/performance/noDelete: <explanation>
 		delete user.password;
-		return user;
+		return { user };
 	}
 }

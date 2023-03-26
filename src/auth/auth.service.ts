@@ -20,11 +20,14 @@ export class AuthService {
 	async register(dto: RegisterDTO, res: Response) {
 		try {
 			const hash = await argon.hash(dto.password);
+			const avatarurl = new URL("https://api.dicebear.com/5.x/shapes/svg");
+			avatarurl.searchParams.append("seed", dto.username);
 			const user = await this.db.users.create({
 				data: {
 					username: dto.username,
 					email: dto.email,
 					password: hash,
+					avatarSVGURL: avatarurl.toString(),
 				},
 			});
 			const token = await this.signToken(user);
@@ -54,19 +57,20 @@ export class AuthService {
 			const isCorrect = await argon.verify(user.password, dto.password);
 			if (isCorrect) {
 				const token = await this.signToken(user);
+				console.log(token)
 				res.cookie("jwt", token, {
 					expires: new Date(Date.now() + 3600000 * 24 * 30),
-					httpOnly: true,
 					secure: true,
 				});
+				// rome-ignore lint/performance/noDelete: <explanation>
+				delete user.password;
 				return res
 					.cookie("jwt", token, {
 						expires: new Date(Date.now() + 3600000 * 24 * 30),
-						httpOnly: true,
 						secure: true,
 					})
 					.status(200)
-					.send("User Logged in successfully");
+					.json({ user, token });
 			} else {
 				return res.status(401).send(`Incorrect password for ${user.username}`);
 			}
