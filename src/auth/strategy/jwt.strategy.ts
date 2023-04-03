@@ -10,7 +10,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
 		super({
 			jwtFromRequest: ExtractJwt.fromExtractors([
 				(request: Request) => {
-					let data = request.cookies["jwt"];
+					let data = request.cookies["token"];
 					if (!data) {
 						return null;
 					}
@@ -27,6 +27,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
 		const user = await this.prisma.users.findUnique({
 			where: {
 				id: payload.sub,
+			},
+			include: {
+				friends: true,
+				pendingFriendRequests: true,
 			},
 		});
 		// rome-ignore lint/performance/noDelete: <explanation>

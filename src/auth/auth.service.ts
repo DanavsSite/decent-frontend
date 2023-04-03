@@ -32,10 +32,9 @@ export class AuthService {
 			});
 			const token = await this.signToken(user);
 			return res
-				.cookie("jwt", token, {
+				.cookie("token", token, {
 					expires: new Date(Date.now() + 3600000 * 24 * 30),
 					httpOnly: true,
-					secure: true,
 				})
 				.status(200)
 				.json(user);
@@ -57,20 +56,14 @@ export class AuthService {
 			const isCorrect = await argon.verify(user.password, dto.password);
 			if (isCorrect) {
 				const token = await this.signToken(user);
-				console.log(token)
-				res.cookie("jwt", token, {
+				console.log(token);
+				res.cookie("token", token, {
 					expires: new Date(Date.now() + 3600000 * 24 * 30),
-					secure: true,
+					httpOnly: true,
 				});
 				// rome-ignore lint/performance/noDelete: <explanation>
 				delete user.password;
-				return res
-					.cookie("jwt", token, {
-						expires: new Date(Date.now() + 3600000 * 24 * 30),
-						secure: true,
-					})
-					.status(200)
-					.json({ user, token });
+				return res.status(200).json({ user, token });
 			} else {
 				return res.status(401).send(`Incorrect password for ${user.username}`);
 			}

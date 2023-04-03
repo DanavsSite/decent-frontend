@@ -6,35 +6,33 @@ import {
 } from "@nestjs/websockets";
 import { MessageBody, WebSocketServer } from "@nestjs/websockets/decorators";
 import { Socket } from "socket.io";
+import { Client } from "socket.io/dist/client";
 import { User } from "src/decorators/user";
 import { messageDTo } from "src/dtos/chat.dto";
 import { ChatService } from "./chat.service";
-@WebSocketGateway()
+@WebSocketGateway(8080,{cors:{
+	origin: "http://localhost:5173",
+	credentials:true
+}
+})
 export class ChatGateway {
 	@WebSocketServer()
 	server;
 	constructor(private service: ChatService) {}
 	async handleConnection(client: Socket) {
-		let bool;
-		if (!client.handshake.headers.authorization) {
-			bool = false;
-		} else {
-			bool = true;
-		}
-		await this.service.verify(
-			bool,
+		this.service.verify(
+			!client.handshake.headers.cookie ? false : true,
 			client,
-			client.handshake.headers["authorization"],
+			client.handshake.headers.cookie,
 		);
 	}
-
 	@SubscribeMessage('sendMessage')
 	async sendMessage(
 		@ConnectedSocket() client: Socket,
 		@MessageBody() body: messageDTo,
 	) {
 		const data = await this.service.getData(
-			client.handshake.headers.authorization,
+			client.handshake.headers.cookie.slice(6),
 		);
 		await this.service.sendMessage(client, body, data, this.server);
 	}

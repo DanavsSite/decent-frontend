@@ -8,4 +8,9 @@ export class UserController {
 	getUser(@Req() req: Request) {
 		return req.user;
 	}
+	@UseGuards(AuthGuard('jwt'))
+	@Get('fre')
+	getFriends(@Req() req: Request) {
+		return req.user;
+	}
 }

@@ -16,7 +16,7 @@ export class ChatService {
 	) {}
 	async verify(jwt: boolean, client: Socket, ajwt: string) {
 		if (jwt) {
-			const jwt2 = this.jwt.verify(ajwt, {
+			const jwt2 = this.jwt.verify(ajwt.slice(6), {
 				secret: this.config.get("JWT_SECRET"),
 			});
 			let user = await this.prisma.users.findUnique({
@@ -126,7 +126,8 @@ export class ChatService {
 		// rome-ignore lint/suspicious/noExplicitAny: <explanation>
 		server: any,
 	) {
-		let to = await this.prisma.users.findUnique({
+		console.log(user, messageBody);
+		const to = await this.prisma.users.findUnique({
 			where: {
 				username: messageBody.to,
 			},
@@ -136,7 +137,6 @@ export class ChatService {
 		});
 		to.friends.forEach((friend) => {
 			if (friend.username === user.username) {
-				messageBody.to = undefined;
 				server.to(to.id).emit("message", messageBody);
 			}
 		});
